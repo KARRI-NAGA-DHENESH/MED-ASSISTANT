@@ -1,0 +1,60 @@
+MED-ASSISTANT — DEMO SCRIPT
+3-4 Minute Spoken Presentation
+============================================================
+
+[0:00 — HOOK]
+Every day, millions of patients take multiple medications, experience new symptoms, and struggle to remember everything before their doctor's visit. Med-Assistant solves this — it's your personal AI medical concierge that tracks your medications, logs symptoms, and compiles everything into a ready-to-use doctor visit agenda.
+
+[0:20 — WHAT IT IS]
+Med-Assistant is a personal concierge agent built on the Google Agent Development Kit, track 3 — Concierge Agents. It's a multi-agent system that orchestrates specialized AI agents to manage the day-to-day health-tracking tasks that patients often do poorly or forget entirely.
+
+[0:40 — SHOW THE BANNER]
+(show assets/cover_page_banner.png)
+What you're seeing here is the Med-Assistant project. Three capabilities — Medication Scheduler, Symptom Analyst, and Security Guardrails — all driven by intelligent agents. Automated. Secure. Intelligent.
+
+[1:00 — ARCHITECTURE]
+(show assets/architecture_diagram.png)
+Let me walk you through how the system works, node by node.
+
+Every message from the user first enters the Security Checkpoint. This is a function node that scrubs personally identifiable information — phone numbers, emails, SSNs — detects prompt injection attacks, and blocks any prohibited substance inquiries. Every decision is logged as a structured JSON audit entry.
+
+If the input is safe, it flows to the Orchestrator — a single-turn LlmAgent that decides what the user needs. For medication questions, it delegates via AgentTool to the Medication Scheduler sub-agent. For symptom reports, it routes to the Symptom Analyst.
+
+Both sub-agents are powered by a local MCP server running three tools: check_drug_conflicts, calculate_dose_schedule, and assess_symptom_urgency. These provide real clinical logic — computing dose timings, flagging drug combinations, and screening red-flag emergency symptoms.
+
+The Orchestrator Router inspects the orchestrator's output. If the user asked for a doctor visit agenda, it routes to the Human Approval node — a pause in the workflow where the user must explicitly consent before the system compiles the agenda.
+
+Once approved, the Agenda Builder compiles a structured, print-ready physician summary from everything in the session. If denied, it exits cleanly.
+
+[2:00 — LIVE DEMO]
+(switch to playground at localhost:18081)
+
+Let me show you three test cases.
+
+(pause)
+
+First — medication scheduling. I'll type:
+"I have a prescription for Aspirin 81mg QD starting at 8 AM. Can you schedule it and check for any conflicts?"
+The agent delegates to medication_scheduler, calls calculate_dose_schedule for QD frequency, determines the timing as 08:00, and runs check_drug_conflicts to confirm no interactions. You'll see a structured schedule in the response.
+
+(pause)
+
+Second — symptom urgency. I'll type:
+"I've been experiencing severe chest pain and shortness of breath since this morning."
+The agent delegates to symptom_analyst, which calls assess_symptom_urgency. Chest pain and shortness of breath are red-flag symptoms. The tool immediately returns a critical urgency status. The agent responds with an emergency alert advising the user to call emergency services immediately.
+
+(pause)
+
+Third — doctor agenda with human approval. I'll type:
+"Please compile a doctor visit agenda for me."
+The orchestrator flags this as needing approval and the workflow pauses. You'll see the system ask: "Do you approve compiling and generating your doctor visit agenda? (yes/no)". I'll type yes — and the agenda_builder generates a structured physician summary from the full session history.
+
+[3:00 — SECURITY & MCP]
+The security checkpoint is enforced on every single message — not optional, not skippable. PII is redacted before it ever reaches the LLM. Injection attacks are blocked at the gate.
+
+The MCP server runs locally via stdio transport — no external API calls. All three tools are domain-specific, designed specifically for this healthcare use case. They're reusable, testable, and easy to extend.
+
+[3:30 — IMPACT / CLOSE]
+Med-Assistant empowers patients to show up to their appointments prepared. Physicians receive structured data rather than scattered notes. Medication errors are flagged before they happen. And all of it is protected behind a security layer that treats patient data with the seriousness it deserves.
+
+Thank you.
