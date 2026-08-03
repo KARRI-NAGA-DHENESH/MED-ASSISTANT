@@ -37,11 +37,25 @@ from app.app_utils.typing import Feedback
 
 load_dotenv()
 setup_telemetry()
-# Must run before get_fast_api_app to set the tracer provider resource.
-setup_agent_engine_telemetry()
-_, project_id = google.auth.default()
-logging_client = google_cloud_logging.Client()
-logger = logging_client.logger(__name__)
+
+# Disable Google Cloud telemetry when running outside Google Cloud.
+try:
+    setup_agent_engine_telemetry()
+except Exception:
+    pass
+
+try:
+    _, project_id = google.auth.default()
+    logging_client = google_cloud_logging.Client()
+    logger = logging_client.logger(__name__)
+except Exception:
+    project_id = None
+
+    class DummyLogger:
+        def log_struct(self, *args, **kwargs):
+            pass
+
+    logger = DummyLogger()
 allow_origins = (
     os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS") else None
 )
